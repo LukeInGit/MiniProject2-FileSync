@@ -61,9 +61,9 @@ bool IsFileInDirectory(const std::string& filename, const std::filesystem::path&
     return std::filesystem::exists(targetFilePath);
 }
 
-void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& targetDirectory) { // compare all filenames between two directories, call relevant copying functions-
+void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& targetDirectory, bool sourceIsMain) { // compare all filenames between two directories, call relevant copying functions-
     for (const auto& entry : sourceDirectory.GetIterator()) {                                    // depending on if filenames exist.
-                                                                                                 // different usage if directory is main directory - not ideal - may change
+                                                                                                 // bool passed to tell if source is main directory, ideally through directory.IsMainDirectory()
         std::string filename = entry.path().filename().string();   
 
 
@@ -72,7 +72,7 @@ void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& ta
                 std::cout << filename << " exists in target directory.\n";
         }
         else {
-            if (sourceDirectory.IsMainDirectory())
+            if (sourceIsMain)
             {
                 std::cout << filename << " does not exist in target directory. Copying...\n";
             }
@@ -90,8 +90,8 @@ void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& ta
 void basicloop(DirectoryIterator& sourceDirectory, DirectoryIterator& targetDirectory) //temporary loop
 {
     while (true) {
-        SyncDirectories(sourceDirectory, targetDirectory);
-        SyncDirectories(targetDirectory, sourceDirectory);
+        SyncDirectories(sourceDirectory, targetDirectory, sourceDirectory.IsMainDirectory());
+        SyncDirectories(targetDirectory, sourceDirectory, targetDirectory.IsMainDirectory());
 
     }
 }
@@ -103,8 +103,8 @@ int main()
     DirectoryIterator targetDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/DirectoryB"};
     DirectoryIterator binDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/DirectoryBin"};
 
-    SyncDirectories(sourceDirectory, targetDirectory);
-    SyncDirectories(targetDirectory, sourceDirectory);
+    SyncDirectories(sourceDirectory, targetDirectory, sourceDirectory.IsMainDirectory());
+    SyncDirectories(targetDirectory, sourceDirectory, targetDirectory.IsMainDirectory());
 
     //basicloop(sourceDirectory, targetDirectory);
 
