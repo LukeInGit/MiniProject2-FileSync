@@ -1,74 +1,16 @@
 #include <iostream>
-#include <filesystem>
-#include <chrono>
-#include <thread>
-#include <vector>
-
-
-class DirectoryIterator
-{
-private:
-    std::filesystem::directory_iterator m_iterator{};
-    std::filesystem::path m_path{};
-    bool m_isMainDirectory{};
-
-    //DirectoryIterator() = delete;                                           // prevent default constructer usage
-    //DirectoryIterator(const DirectoryIterator&) = delete;                   // delete copy constructor
-    //DirectoryIterator& operator=(const DirectoryIterator&) = delete;        // delete assignment constructor
-public:
-
-     DirectoryIterator(std::string filepath, bool isMain=false)    
-        :m_iterator{ filepath }, m_path{ filepath }, m_isMainDirectory{isMain}
-    {}
-
-    void ResetIterator()
-    {
-        m_iterator = std::filesystem::directory_iterator{ m_path };
-    }
-
-    const std::filesystem::directory_iterator& GetIterator() const
-    {
-        return m_iterator;
-    }
-
-    const std::filesystem::path& GetPath() const
-    {
-        return m_path;
-    }
-
-    bool IsMainDirectory()
-    {
-        return m_isMainDirectory;
-    }
-
-
-    void CheckDirectory()      // print out filenames in directory
-    {
-
-        for (const auto& entry : m_iterator)
-        {
-            if (std::filesystem::is_regular_file(entry))
-            {
-                std::cout << entry.path().filename() << '\n';
-            }
-        }
-        ResetIterator();
-    }
-
-
-
-};
-
-
-
+#include <string>           //for string
+#include <filesystem>       //for filesystem
+#include <chrono>           //for sleep_for
+#include <thread>           //for jthread
+#include <vector>           //for vector
+#include "directoryIterator.h"
 
 bool FileIsInDirectory(const std::string& filename, const std::filesystem::path& directory)         // check if filename is in target directory
 {
     std::filesystem::path targetFilePath = directory / filename;
     return std::filesystem::exists(targetFilePath);
 }
-
-
 
 void CopyFileTo(const std::filesystem::path& filepath, DirectoryIterator& targetDirectory)
 {
@@ -96,33 +38,83 @@ void DeleteAllFilesInDirec(DirectoryIterator& binDirectory)
     }
 }
 
-void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& targetDirectory, DirectoryIterator& binDirectory, bool sourceIsMain) { // compare all filenames between two directories, call relevant copying functions-
-    for (const auto& entry : sourceDirectory.GetIterator()) {                                    // depending on if filenames exist.
-                                                                                                 // bool passed to tell if source is main directory, ideally through directory.IsMainDirectory()
-        std::string filename = entry.path().filename().string();   
+//void SyncDirectories( DirectoryIterator& sourceDirectory,  DirectoryIterator& targetDirectory, DirectoryIterator& binDirectory, bool sourceIsMain) { // compare all filenames between two directories, call relevant copying functions-
+//    for (const auto& entry : sourceDirectory.GetIterator()) {                                    // depending on if filenames exist.
+//                                                                                                 // bool passed to tell if source is main directory, ideally through directory.IsMainDirectory()
+//        std::string filename = entry.path().filename().string();   
+//
+//
+//        if (FileIsInDirectory(filename, targetDirectory.GetPath())) {
+//
+//                std::cout << filename << " exists in target directory.\n";
+//        }
+//        else {
+//            if (sourceIsMain)
+//            {
+//                std::cout << filename << " does not exist in target directory. Copying...\n";
+//                CopyFileTo(entry.path(), targetDirectory);
+//            }
+//            else
+//            {
+//                std::cout << filename << " does not exist in main directory. Deleting...\n";
+//                MoveFileTo(entry.path(), binDirectory);
+//                
+//            }
+//        }
+//    }
+//    sourceDirectory.ResetIterator();    // iterators need to be reset or they will only detect the final file
+//    targetDirectory.ResetIterator();
+//}
 
 
-        if (FileIsInDirectory(filename, targetDirectory.GetPath())) {
+struct DirectoryInfo // for making it obvious in the code that a direc is meant to be bin/main/sub
+{
+    std::string name;
+    DirectoryIterator iterator;
 
-                std::cout << filename << " exists in target directory.\n";
-        }
-        else {
-            if (sourceIsMain)
-            {
-                std::cout << filename << " does not exist in target directory. Copying...\n";
-                CopyFileTo(entry.path(), targetDirectory);
+    DirectoryInfo(std::string path, std::string name = "Sub")
+        : name(name), iterator(path) {}
+};
+
+
+//TODO: Ideally reduce duplicate code without introducing complexity
+void SyncDirectories(DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories)
+{
+
+        for (auto& subdirectory : subDirectories)                                                        //for each subdirectory in subdirectories vector
+        {
+            for (const auto& fileInMain : mainDirectory.iterator.GetIterator()) {                        //for each file in the main directory                   
+
+                std::string mainfilename = fileInMain.path().filename().string();                            // depending on if filenames exist.
+
+                if (FileIsInDirectory(mainfilename, subdirectory.iterator.GetPath())) {                      //check if subdirec has the file from main
+
+                    std::cout << mainfilename << " exists in " << subdirectory.iterator.GetPath().filename().string() << "\n";
+                }
+                else {                                                                                   //copy it if it does not
+                    std::cout << mainfilename << " does not exist in " << subdirectory.iterator.GetPath().filename().string() << ", Copying...\n";
+                    CopyFileTo(fileInMain.path(), subdirectory.iterator);
+                }
             }
-            else
+            for (const auto& fileInSub : subdirectory.iterator.GetIterator())                           //for each file in subdirectory
             {
-                std::cout << filename << " does not exist in main directory. Deleting...\n";
-                MoveFileTo(entry.path(), binDirectory);
+                std::string subfilename = fileInSub.path().filename().string();
+                if (FileIsInDirectory(subfilename, mainDirectory.iterator.GetPath())) {                 //check if a file in subdirec is in main
+
+                    std::cout << subfilename << " exists in " << mainDirectory.iterator.GetPath().filename().string() << "\n";
+                }
+                else {                                                                                  //delete it if it does not
+                    std::cout << subfilename << " does not exist in " << mainDirectory.iterator.GetPath().filename().string() << ", Deleting...\n";
+                    DeleteFile(fileInSub.path());
+                }
                 
             }
+
+            mainDirectory.iterator.ResetIterator();    // iterators need to be reset after being used or they will only detect the final file
+            subdirectory.iterator.ResetIterator();  // iterators need to be reset after being used or they will only detect the final file
         }
-    }
-    sourceDirectory.ResetIterator();    // iterators need to be reset or they will only detect the final file
-    targetDirectory.ResetIterator();
 }
+
 
 
 void MonitorDirectory(const std::filesystem::path& pathToMonitor, std::stop_token stoken) {                                 //monitor directory and detect changes.
@@ -149,14 +141,7 @@ void MonitorDirectory(const std::filesystem::path& pathToMonitor, std::stop_toke
     }
 }
 
-namespace DirecType {
-    enum DirectoryType {
-        Bin =0,
-        Main=1,
-        Sub1=2, 
-        MaxDirectories 
-    };
-}
+
 //void basicloop(DirectoryIterator& sourceDirectory, DirectoryIterator& targetDirectory) //temporary loop
 //{
 //    while (true) {
@@ -167,50 +152,27 @@ namespace DirecType {
 //    }
 //}
 
-struct DirectoryInfo // for making it obvious in the code that a direc is meant to be bin/main/sub
-{
-    std::string name;
-    DirectoryIterator iterator;
 
-    DirectoryInfo(std::string path,  std::string name = "Sub-Directory", bool isMain = false)
-        :  name(name), iterator(path, isMain) {}
-};
 
 
 int main()
 {
-    std::vector<DirectoryInfo> directories=
+   // DirectoryInfo binDirectory  {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/BinDirectory",  "Bin",  false };
+    DirectoryInfo mainDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", "Main" };
+
+    std::vector<DirectoryInfo> subDirectories =
     {
-        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/BinDirectory",      "Bin",      false   },
-        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory",     "Main",     true    },
-        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1",     "Sub"               },
+        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1", "Sub"},
+        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2", "Sub"},
+        {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3", "Sub"},
     };
 
 
-   // DirectoryInfo test{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/BinDirectory",      "Bin",      false };
-
-    //SyncDirectories(mainDirectory, subDirectory, binDirectory, mainDirectory.IsMainDirectory());
-    //SyncDirectories(subDirectory, mainDirectory, binDirectory, subDirectory.IsMainDirectory());
+    SyncDirectories(mainDirectory, subDirectories);
 
 
-    SyncDirectories(
-        directories[DirecType::Main].iterator,
-        directories[DirecType::Sub1].iterator,
-        directories[DirecType::Bin].iterator,
-        directories[DirecType::Main].iterator.IsMainDirectory()
-    );
-
-    SyncDirectories(
-        directories[DirecType::Sub1].iterator,
-        directories[DirecType::Main].iterator,
-        directories[DirecType::Bin].iterator,
-        directories[DirecType::Sub1].iterator.IsMainDirectory()
-    );
 
 
-    std::cout << directories[DirecType::Bin].name;
-    std::cout << directories[DirecType::Main].name;
-    std::cout << directories[DirecType::Sub1].name;
     //basicloop(sourceDirectory, targetDirectory);
 
     //std::string directoryPath = "C:/Users/Luke/source/repos/MiniProject_2_FileSync/DirectoryA";
