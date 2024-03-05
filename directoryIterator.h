@@ -10,12 +10,6 @@ class DirectoryIterator
 private:
     std::filesystem::directory_iterator m_iterator{};
     std::filesystem::path m_path{};
-   // bool m_isMainDirectory{};
-
-    //storing in vector calls copy function and this is unlikely to be needed anyway.
-    //DirectoryIterator() = delete;                                           // prevent default constructer usage
-    //DirectoryIterator(const DirectoryIterator&) = delete;                   // delete copy constructor
-    //DirectoryIterator& operator=(const DirectoryIterator&) = delete;        // delete assignment constructor
 public:
 
     DirectoryIterator(std::string filepath)//, bool isMain = false)
@@ -37,12 +31,6 @@ public:
         return m_path;
     }
 
-    //bool IsMainDirectory()
-    //{
-    //    return m_isMainDirectory;
-    //}
-
-
     void CheckDirectory()      // print out filenames in directory
     {
 
@@ -55,9 +43,6 @@ public:
         }
         ResetIterator();
     }
-
-
-
 };
 
 #endif // !DIRECTORYITERATOR_H
