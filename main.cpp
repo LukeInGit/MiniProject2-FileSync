@@ -1,3 +1,4 @@
+//std
 #include <iostream>
 #include <string>           //for string
 #include <filesystem>       //for filesystem
@@ -5,6 +6,12 @@
 #include <thread>           //for jthread
 #include <vector>           //for vector
 #include <mutex>            //for lock_guard
+//external
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <GLFW/glfw3.h>
+//mine
 #include "directoryIterator.h"
 
 bool FileIsInDirectory(const std::string& filename, const std::filesystem::path& directory)         // check if filename is in target directory
@@ -131,6 +138,12 @@ void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, Dir
         }
     }
 }
+
+void testfunc()
+{
+
+}
+
 
 int main()
 {
