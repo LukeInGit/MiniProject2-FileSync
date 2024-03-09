@@ -7,8 +7,6 @@
 #include <mutex>            //for lock_guard
 #include "directoryIterator.h"
 
-
-
 bool FileIsInDirectory(const std::string& filename, const std::filesystem::path& directory)         // check if filename is in target directory
 {
     std::filesystem::path targetFilePath = directory / filename;
@@ -51,7 +49,6 @@ struct DirectoryInfo // for making it obvious in the code that a direc is meant 
         : iterator{ path },  directoryID{ directoryID }, name{name} {}
 };
 
-
 void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
 {
     for (const auto& fileInSub : subDirectory.iterator.GetIterator())                                                                        //for each file in subdirectory
@@ -66,11 +63,8 @@ void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
             DeleteFile(fileInSub.path());
         }
     }
- 
     subDirectory.iterator.ResetIterator();// iterators need to be reset after being used or they will only detect the final file
-
 }
-
 
 void SyncMainDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
 {
@@ -92,14 +86,12 @@ void SyncMainDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory
 
 void SyncAllDirectories(DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories)
 {
-        for (auto& subdirectory : subDirectories)                                                                                                    //for each subdirectory in subdirectories vector
+        for (auto& subdirectory : subDirectories) // perform the sync actions for every subdirectory and main
         {
             SyncMainDirectory(mainDirectory, subdirectory);
             SyncSubDirectory(mainDirectory, subdirectory);
         }
 }
-
-
 
 std::mutex mtx;
 void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories) {//monitor a directory and detect changes.
@@ -117,18 +109,15 @@ void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, Dir
 
             if (currentModificationTime != lastModificationTime)                //if a file has been modified
             {
-                std::cout << '\n' << "ONE" << '\n';
                 std::cout << pathToMonitor.filename()<<" has been modified.\n";
                 // perform actions based on directory changes
                 std::lock_guard<std::mutex> lock(mtx);                          //mutex lock
                 if (direcToMonitor.directoryID == 0)                            //check if the directory that was modified was the main one via the ID
                 {
-                    std::cout << '\n' << "TWO" << '\n';
                     SyncAllDirectories(mainDirectory, subDirectories);          //if it was, call a full scale sync
                 }
                 else
                 {                      
-                    std::cout << '\n' << "THREE" << '\n';//if not, sync the specific subdirectory
                     SyncSubDirectory(mainDirectory, subDirectories[direcToMonitor.directoryID-1]); //-1 because maindirec is 0 and is not included in subDirectories vector 
                     SyncMainDirectory(mainDirectory,subDirectories[direcToMonitor.directoryID-1]);//^
                 }
@@ -145,7 +134,6 @@ void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, Dir
 
 int main()
 {
-   // DirectoryInfo binDirectory  {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/BinDirectory",  "Bin",  false };
     DirectoryInfo mainDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory",0, "Main" };
 
     std::vector<DirectoryInfo> subDirectories =
