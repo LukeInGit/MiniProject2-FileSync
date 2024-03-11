@@ -13,15 +13,78 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\imguisrc">
+      <UniqueIdentifier>{4533c5bf-0443-439b-82c1-4d42a593a97a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mysrc">
+      <UniqueIdentifier>{7d84516f-d1d6-4dff-b46f-9dd5b2f7de7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="external\~imgui\imgui.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\imgui_demo.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\imgui_draw.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\backends\imgui_impl_dx9.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\backends\imgui_impl_win32.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\imgui_tables.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
+    <ClCompile Include="external\~imgui\imgui_widgets.cpp">
+      <Filter>Source Files\imguisrc</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\mysrc</Filter>
+    </ClCompile>
+    <ClCompile Include="fileManager.cpp">
+      <Filter>Source Files\mysrc</Filter>
+    </ClCompile>
+    <ClCompile Include="imguiGui.cpp">
+      <Filter>Source Files\mysrc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="external\~imgui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\imstb_rectpack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\imstb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\imstb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\backends\imgui_impl_dx9.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\~imgui\backends\imgui_impl_win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="directoryIterator.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\mysrc</Filter>
+    </ClInclude>
+    <ClInclude Include="fileManager.h">
+      <Filter>Source Files\mysrc</Filter>
+    </ClInclude>
+    <ClInclude Include="imguiGui.h">
+      <Filter>Source Files\mysrc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
