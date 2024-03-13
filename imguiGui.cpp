@@ -60,11 +60,10 @@ namespace imguiGUI {
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
+        ImGui::FileBrowser fileDialog;
         //default window size
         float windowWidth{ 1280 };
         float windowHeight{ 800 };
-
-
         // Main loop
         bool done = false;
         bool notExiting{ true };
@@ -150,7 +149,8 @@ namespace imguiGUI {
                     windowHeight = windowSize.y;
 
 
-
+                    if (ImGui::Button("open file dialog"))
+                        fileDialog.Open();
 
 
 
@@ -174,6 +174,15 @@ namespace imguiGUI {
 
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
+
+                fileDialog.Display();
+
+                if (fileDialog.HasSelected())
+                {
+                    std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
+                    fileDialog.ClearSelected();
+                }
+
             }
 
 
