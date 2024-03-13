@@ -9,6 +9,7 @@ namespace imguiGUI {
 
     LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+    //used for checking if window is being moved
     bool g_Moving{ false };
     // Main code
     int imguiMainLoop(int, char**)
