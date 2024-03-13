@@ -1,11 +1,3 @@
-// Dear ImGui: standalone example application for DirectX 9
-
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
 #include "imguiGui.h"
 
 namespace imguiGUI {
@@ -15,20 +7,26 @@ namespace imguiGUI {
     static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
     static D3DPRESENT_PARAMETERS    g_d3dpp = {};
 
-    // Forward declarations of helper functions
-    bool CreateDeviceD3D(HWND hWnd);
-    void CleanupDeviceD3D();
-    void ResetDevice();
     LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+
 
     // Main code
     int imguiMainLoop(int, char**)
     {
-         // Create application window
-         //ImGui_ImplWin32_EnableDpiAwareness();
+        // // Create application window
+         ImGui_ImplWin32_EnableDpiAwareness();
         WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
         ::RegisterClassExW(&wc);
-        HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+        HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Filesync", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+
+        // Create application window
+        //ImGui_ImplWin32_EnableDpiAwareness();
+        //WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+        //::RegisterClassExW(&wc);
+        //HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_POPUP|WS_SIZEBOX, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+
+
 
         // Initialize Direct3D
         if (!CreateDeviceD3D(hwnd))
@@ -57,29 +55,17 @@ namespace imguiGUI {
         ImGui_ImplWin32_Init(hwnd);
         ImGui_ImplDX9_Init(g_pd3dDevice);
 
-        // Load Fonts
-        // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-        // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-        // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-        // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-        // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-        // - Read 'docs/FONTS.md' for more instructions and details.
-        // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-        //io.Fonts->AddFontDefault();
-        //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-        //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-        //IM_ASSERT(font != nullptr);
-
-        // Our state
-        bool show_demo_window = true;
-        bool show_another_window = false;
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+
+        //default window size
+        float windowWidth{ 1280 };
+        float windowHeight{ 800 };
+
 
         // Main loop
         bool done = false;
+
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)
@@ -96,33 +82,53 @@ namespace imguiGUI {
                 break;
 
             // Handle window resize (we don't resize directly in the WM_SIZE handler)
-            if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
             {
-                g_d3dpp.BackBufferWidth = g_ResizeWidth;
-                g_d3dpp.BackBufferHeight = g_ResizeHeight;
-                g_ResizeWidth = g_ResizeHeight = 0;
-                ResetDevice();
+
+                //::SetWindowPos(hwnd, nullptr, 0, 0, static_cast<int>(windowWidth), static_cast<int>(windowHeight), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+                if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
+                {
+
+
+                    g_d3dpp.BackBufferWidth = g_ResizeWidth;
+                    g_d3dpp.BackBufferHeight = g_ResizeHeight;
+
+                    g_ResizeWidth = g_ResizeHeight = 0;
+                    ResetDevice();
+
+                }
             }
 
             // Start the Dear ImGui frame
             ImGui_ImplDX9_NewFrame();
             ImGui_ImplWin32_NewFrame();
             ImGui::NewFrame();
-
-            // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-            if (show_demo_window)
-                ImGui::ShowDemoWindow(&show_demo_window);
-
+            
             // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
             {
+
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                int width = clientRect.right - clientRect.left;
+                int height = clientRect.bottom - clientRect.top;
+
                 static float f = 0.0f;
                 static int counter = 0;
+                ImGui::SetNextWindowPos({ 0,0 });
+               ImGui::SetNextWindowSize({ static_cast<float>(width),static_cast<float>(height) });
+                //bool close_program{ false };
+                //ImGui::Begin("Hello, world!", &close_program);                          // Create a window called "Hello, world!" and append into it.
+                bool notExiting{ true };
+                ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoTitleBar| ImGuiWindowFlags_NoResize);
+                if (!notExiting)
+                {
+                    ::PostQuitMessage(0);
+                }
 
-                ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+                    ImVec2 windowSize = ImGui::GetWindowSize();
+                    windowWidth = windowSize.x;
+                    windowHeight = windowSize.y;
 
                 ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-                ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-                ImGui::Checkbox("Another Window", &show_another_window);
 
                 ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
                 ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -136,15 +142,6 @@ namespace imguiGUI {
                 ImGui::End();
             }
 
-            // 3. Show another simple window.
-            if (show_another_window)
-            {
-                ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-                ImGui::Text("Hello from another window!");
-                if (ImGui::Button("Close Me"))
-                    show_another_window = false;
-                ImGui::End();
-            }
 
             // Rendering
             ImGui::EndFrame();
@@ -214,7 +211,6 @@ namespace imguiGUI {
         ImGui_ImplDX9_CreateDeviceObjects();
     }
 
-
     // Win32 message handler
     // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
     // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
@@ -232,6 +228,7 @@ namespace imguiGUI {
                 return 0;
             g_ResizeWidth = (UINT)LOWORD(lParam); // Queue resize
             g_ResizeHeight = (UINT)HIWORD(lParam);
+
             return 0;
         case WM_SYSCOMMAND:
             if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
@@ -240,6 +237,29 @@ namespace imguiGUI {
         case WM_DESTROY:
             ::PostQuitMessage(0);
             return 0;
+
+        //case WM_LBUTTONDOWN:
+        //    position = MAKEPOINTS(lParam);
+        //    return 0;
+        //case WM_MOUSEMOVE:
+        //{
+        //    if (wParam == MK_LBUTTON)
+        //    {
+        //        const auto points = MAKEPOINTS(lParam);
+        //        auto rect = ::RECT{};
+        //        GetWindowRect(hWnd, &rect);
+
+        //        // Calculate the new window position based on the mouse movement
+        //        const int newLeft = rect.left + points.x - position.x;
+        //        const int newTop = rect.top + points.y - position.y;
+
+        //        // Check if the mouse is within the window width
+        //        if (position.x >= 0 && position.x <= (rect.right - rect.left) && position.y >= 0 && position.y <= 19)
+        //        {
+        //            ::SetWindowPos(hWnd, HWND_TOPMOST, newLeft, newTop, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER);
+        //        }
+        //    }
+        //}
         }
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
     }

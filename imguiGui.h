@@ -28,5 +28,11 @@ namespace imguiGUI {
 
 	// Win32 message handler
 	LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+
+
+
+
+	inline POINTS position{};
 }
 #endif 
