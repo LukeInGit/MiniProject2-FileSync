@@ -9,6 +9,8 @@ namespace imguiGUI {
 
     LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+
+
     //used for checking if window is being moved
     bool g_Moving{ false };
     // Main code
@@ -127,7 +129,6 @@ namespace imguiGUI {
                 //ImGuiWindowFlags_NoTitleBar
                // ImGui::Begin("FileSync", &notExiting, (g_Moving ? ImGuiWindowFlags_NoMove : ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize));
 
-
                 //if window is being moved, dont allow it to be moved and resized at the same time
                 if (g_Moving) {
                     ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
@@ -147,6 +148,14 @@ namespace imguiGUI {
                     ImVec2 windowSize = ImGui::GetWindowSize();
                     windowWidth = windowSize.x;
                     windowHeight = windowSize.y;
+
+
+
+
+
+
+
+
 
                 ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
