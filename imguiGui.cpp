@@ -9,24 +9,23 @@ namespace imguiGUI {
 
     LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-
-
+    bool g_Moving{ false };
     // Main code
     int imguiMainLoop(int, char**)
     {
-        // // Create application window
-         ImGui_ImplWin32_EnableDpiAwareness();
-        WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
-        ::RegisterClassExW(&wc);
-        HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Filesync", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
-
-        // Create application window
-        //ImGui_ImplWin32_EnableDpiAwareness();
+        //// // Create application window
+        // ImGui_ImplWin32_EnableDpiAwareness();
         //WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
         //::RegisterClassExW(&wc);
-        //HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_POPUP|WS_SIZEBOX, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+        //HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Filesync", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
+         //Create application window
+        ImGui_ImplWin32_EnableDpiAwareness();
+        WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+        ::RegisterClassExW(&wc);
+        HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_POPUP, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
+        //WS_SIZEBOX
 
         // Initialize Direct3D
         if (!CreateDeviceD3D(hwnd))
@@ -65,11 +64,12 @@ namespace imguiGUI {
 
         // Main loop
         bool done = false;
-
+        bool notExiting{ true };
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)
             // See the WndProc() function below for our to dispatch events to the Win32 backend.
+
             MSG msg;
             while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
             {
@@ -77,14 +77,18 @@ namespace imguiGUI {
                 ::DispatchMessage(&msg);
                 if (msg.message == WM_QUIT)
                     done = true;
+                if (msg.message == WM_LBUTTONUP)
+                    g_Moving = false;
             }
             if (done)
                 break;
 
             // Handle window resize (we don't resize directly in the WM_SIZE handler)
             {
-
-                //::SetWindowPos(hwnd, nullptr, 0, 0, static_cast<int>(windowWidth), static_cast<int>(windowHeight), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+               // if (!lbuttondown)
+               // {
+                    ::SetWindowPos(hwnd, nullptr, 0, 0, static_cast<int>(windowWidth), static_cast<int>(windowHeight), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
+               // }
                 if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
                 {
 
@@ -106,24 +110,39 @@ namespace imguiGUI {
             // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
             {
 
-                RECT clientRect;
-                GetClientRect(hwnd, &clientRect);
-                int width = clientRect.right - clientRect.left;
-                int height = clientRect.bottom - clientRect.top;
+                //RECT clientRect;
+                //GetClientRect(hwnd, &clientRect);
+                //int width = clientRect.right - clientRect.left;
+                //int height = clientRect.bottom - clientRect.top;
 
                 static float f = 0.0f;
                 static int counter = 0;
                 ImGui::SetNextWindowPos({ 0,0 });
-               ImGui::SetNextWindowSize({ static_cast<float>(width),static_cast<float>(height) });
+              // ImGui::SetNextWindowSize({ static_cast<float>(width),static_cast<float>(height) });
                 //bool close_program{ false };
                 //ImGui::Begin("Hello, world!", &close_program);                          // Create a window called "Hello, world!" and append into it.
-                bool notExiting{ true };
-                ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoTitleBar| ImGuiWindowFlags_NoResize);
+                
+                //ImGuiWindowFlags_NoResize
+                //ImGuiWindowFlags_NoTitleBar
+               // ImGui::Begin("FileSync", &notExiting, (g_Moving ? ImGuiWindowFlags_NoMove : ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize));
+
+
+                //if window is being moved, dont allow it to be moved and resized at the same time
+                if (g_Moving) {
+                    ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+                    
+                }
+                else {
+                    ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove);
+                }
+
+                //exit if x button pressed
                 if (!notExiting)
                 {
                     ::PostQuitMessage(0);
                 }
 
+                //get imgui window size for dx9 window resizing later
                     ImVec2 windowSize = ImGui::GetWindowSize();
                     windowWidth = windowSize.x;
                     windowHeight = windowSize.y;
@@ -137,6 +156,11 @@ namespace imguiGUI {
                     counter++;
                 ImGui::SameLine();
                 ImGui::Text("counter = %d", counter);
+
+                if (g_Moving)
+                {
+                    counter++;
+                }
 
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
@@ -238,28 +262,31 @@ namespace imguiGUI {
             ::PostQuitMessage(0);
             return 0;
 
-        //case WM_LBUTTONDOWN:
-        //    position = MAKEPOINTS(lParam);
-        //    return 0;
-        //case WM_MOUSEMOVE:
-        //{
-        //    if (wParam == MK_LBUTTON)
-        //    {
-        //        const auto points = MAKEPOINTS(lParam);
-        //        auto rect = ::RECT{};
-        //        GetWindowRect(hWnd, &rect);
+        case WM_LBUTTONDOWN:
+            position = MAKEPOINTS(lParam);
+            return 0;
+        case WM_MOUSEMOVE:
+        {
+            if (wParam == MK_LBUTTON)
+            {
+                const auto points = MAKEPOINTS(lParam);
+                auto rect = ::RECT{};
+                GetWindowRect(hWnd, &rect);
 
-        //        // Calculate the new window position based on the mouse movement
-        //        const int newLeft = rect.left + points.x - position.x;
-        //        const int newTop = rect.top + points.y - position.y;
+                // Calculate the new window position based on the mouse movement
+                const int newLeft = rect.left + points.x - position.x;
+                const int newTop = rect.top + points.y - position.y;
 
-        //        // Check if the mouse is within the window width
-        //        if (position.x >= 0 && position.x <= (rect.right - rect.left) && position.y >= 0 && position.y <= 19)
-        //        {
-        //            ::SetWindowPos(hWnd, HWND_TOPMOST, newLeft, newTop, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER);
-        //        }
-        //    }
-        //}
+                // Check if the mouse is within the window width
+                if (((position.x >= 0 && position.x <= (rect.right - rect.left) && position.y >= 0 && position.y <= 19))
+                    ||
+                    (position.x >= 0 && position.x <= 19 &&position.y >= 0 && position.y <= (rect.bottom - rect.top)))
+                {
+                    g_Moving = true;
+                    ::SetWindowPos(hWnd, HWND_TOPMOST, newLeft, newTop, 0, 0, SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOZORDER);
+                }
+            }
+        }
         }
         return ::DefWindowProcW(hWnd, msg, wParam, lParam);
     }
