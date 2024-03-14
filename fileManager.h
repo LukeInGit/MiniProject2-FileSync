@@ -12,6 +12,7 @@
 #include <mutex>            //for lock_guard
 
 #include "directoryIterator.h"
+#include "directoryVector.h"
 
 namespace fManager {
 
@@ -29,7 +30,7 @@ namespace fManager {
 	void DeleteAllFilesInDirec(DirectoryIterator& binDirectory);
 
 
-	struct DirectoryInfo;
+	//struct DirectoryInfo;
 
 	void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory);
 

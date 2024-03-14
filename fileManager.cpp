@@ -1,6 +1,7 @@
 #include "directoryIterator.h"
 #include "fileManager.h"
 
+
 namespace fManager {
     bool FileIsInDirectory(const std::string& filename, const std::filesystem::path& directory)         // check if filename is in target directory
     {
@@ -34,16 +35,16 @@ namespace fManager {
         }
     }
 
-    struct DirectoryInfo // for making it obvious in the code that a direc is meant to be bin/main/sub
-    {
-        std::string name;
-        int directoryID;
-        DirectoryIterator iterator;
+    //struct DirectoryInfo // for making it obvious in the code that a direc is meant to be bin/main/sub
+    //{
+    //    std::string name;
+    //    int directoryID;
+    //    DirectoryIterator iterator;
 
-        DirectoryInfo(std::string path, int directoryID, std::string name = "Sub")
-            : iterator{ path }, directoryID{ directoryID }, name{ name } {}
-    };
-
+    //    DirectoryInfo(std::string path, int directoryID, std::string name = "Sub")
+    //        : iterator{ path }, directoryID{ directoryID }, name{ name } {}
+    //};
+    
     void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
     {
         for (const auto& fileInSub : subDirectory.iterator.GetIterator())                                                                        //for each file in subdirectory
@@ -130,14 +131,38 @@ namespace fManager {
 
     int runFM()
     {
-        DirectoryInfo mainDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory",0, "Main" };
 
-        std::vector<DirectoryInfo> subDirectories =
-        {
-            {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1",1, "Sub"},
-            {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2",2, "Sub"},
-            {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3",3, "Sub"},
-        };
+
+        DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector
+
+        std::cout << directoryVector.test();
+
+        directoryVector.SetMainDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", 0);
+
+        directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1", 1);
+        directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2", 1);
+        directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3", 1);
+
+
+
+
+
+        //DirectoryInfo mainDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory",0, "Main" };
+        [[maybe_unused]]  DirectoryInfo& mainDirectory{directoryVector.GetMainDirectory()};
+
+        //std::vector<DirectoryInfo> subDirectories =
+        //{
+        //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1",1, "Sub"},
+        //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2",2, "Sub"},
+        //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3",3, "Sub"},
+        //}; 
+         
+        [[maybe_unused]]  std::vector<DirectoryInfo>& subDirectories{ directoryVector.GetSubdirectories() };
+
+
+        
+
+
 
         std::vector<std::jthread> threads;
         std::stop_source ssource;
@@ -145,15 +170,19 @@ namespace fManager {
         std::jthread mainMonitorThread(MonitorDirectory, std::ref(mainDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
         threads.emplace_back(std::move(mainMonitorThread));
 
-        for (DirectoryInfo& subDirectory : subDirectories) {
+        for ( DirectoryInfo& subDirectory : subDirectories) {
             std::jthread monitorThread(MonitorDirectory, std::ref(subDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
             threads.emplace_back(std::move(monitorThread));
         }
 
-        SyncAllDirectories(mainDirectory, subDirectories);
+       // SyncAllDirectories(mainDirectory, subDirectories);
         std::this_thread::sleep_for(std::chrono::seconds(10));
 
         ssource.request_stop();
+
+
+
+
 
 
         return 0;

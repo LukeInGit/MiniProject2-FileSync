@@ -86,5 +86,8 @@
     <ClInclude Include="imguiGui.h">
       <Filter>Source Files\mysrc</Filter>
     </ClInclude>
+    <ClInclude Include="directoryVector.h">
+      <Filter>Source Files\mysrc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

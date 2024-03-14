@@ -5,8 +5,8 @@
 //run with console showing up, requires linker>system>subsytem to be console
 int main()
 {
-	//fManager::runFM(); //runs current main loop of filemanager
-	imguiGUI::imguiMainLoop(__argc, __argv); //currently runs imgui's dx9 example
+	fManager::runFM(); //runs current main loop of filemanager
+	//imguiGUI::imguiMainLoop(__argc, __argv); //currently runs imgui's dx9 example
 }
 
 ////run without console showing up, requires linker>system>subsytem to be windows
