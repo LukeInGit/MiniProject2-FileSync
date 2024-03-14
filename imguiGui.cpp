@@ -60,13 +60,14 @@ namespace imguiGUI {
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
-        ImGui::FileBrowser fileDialog;
+        ImGui::FileBrowser fileDialog(ImGuiFileBrowserFlags_SelectDirectory| ImGuiFileBrowserFlags_HideRegularFiles);
         //default window size
         float windowWidth{ 1280 };
         float windowHeight{ 800 };
         // Main loop
         bool done = false;
         bool notExiting{ true };
+        static char filePathBuffer[256]; // to put filedialog choice in textbox
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)
@@ -111,23 +112,11 @@ namespace imguiGUI {
             
             // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
             {
-
-                //RECT clientRect;
-                //GetClientRect(hwnd, &clientRect);
-                //int width = clientRect.right - clientRect.left;
-                //int height = clientRect.bottom - clientRect.top;
-
                 static float f = 0.0f;
                 static int counter = 0;
                 ImGui::SetNextWindowPos({ 0,0 });
-              // ImGui::SetNextWindowSize({ static_cast<float>(width),static_cast<float>(height) });
-                //bool close_program{ false };
-                //ImGui::Begin("Hello, world!", &close_program);                          // Create a window called "Hello, world!" and append into it.
-                
-                //ImGuiWindowFlags_NoResize
-                //ImGuiWindowFlags_NoTitleBar
-               // ImGui::Begin("FileSync", &notExiting, (g_Moving ? ImGuiWindowFlags_NoMove : ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize));
-
+                      
+                // Create a window called "FileSync" and append into it.                
                 //if window is being moved, dont allow it to be moved and resized at the same time
                 if (g_Moving) {
                     ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
@@ -157,32 +146,35 @@ namespace imguiGUI {
 
 
 
-                ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+              //  ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-                ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-                ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+               // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+               // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-                if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                    counter++;
-                ImGui::SameLine();
-                ImGui::Text("counter = %d", counter);
+                //if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                  //  counter++;
+                //ImGui::SameLine();
+                //ImGui::Text("counter = %d", counter);
 
-                if (g_Moving)
-                {
-                    counter++;
-                }
-
-                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+                //if (g_Moving)
+                //{
+                  //  counter++;
+                //}
+                ImGui::InputText("File Path", filePathBuffer, sizeof(filePathBuffer));
+                //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
 
                 fileDialog.Display();
 
+                
+
                 if (fileDialog.HasSelected())
                 {
                     std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
+                    strcpy_s(filePathBuffer, fileDialog.GetSelected().string().c_str());
                     fileDialog.ClearSelected();
                 }
-
+               
             }
 
 
