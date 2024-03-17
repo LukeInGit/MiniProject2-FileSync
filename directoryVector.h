@@ -50,10 +50,14 @@ public:
             std::cerr << "Main directory is already set." << '\n';
         }
     }
-    void AddSubDirectory(std::string path, int directoryID)
+    bool AddSubDirectory(std::string path, int directoryID)
     {
-        subDirectories.emplace_back(path, directoryID);
-            
+        if (FindDirectory(directoryID)==-1)
+        {
+            subDirectories.emplace_back(path, directoryID);
+            return true;
+        }
+        return false;
     }
 
 #pragma warning(push)
@@ -78,16 +82,25 @@ public:
 
     void DeleteDirectory(int directoryID)
     {
-        
-        subDirectories.erase(subDirectories.begin() + directoryID);
+        int index = FindDirectory(directoryID);
+        if (index == -1)
+        {
+            std::cerr << "Cannot delete, No directory with that ID was found\n";
+        }
+        else
+        {
+            subDirectories.erase(subDirectories.begin() + index);
+            std::cout << "subdirec deleted\n";
+        }
     }
     void EditMainDirectory()
     {
 
     }
-    void EditSubDirectory()
+    void EditSubDirectory(std::string path, int directoryID)
     {
-
+        int index = FindDirectory(directoryID);
+        subDirectories[index].iterator.ChangePath(path);
     }
     void PrintSubdirectories()
     {
@@ -99,6 +112,19 @@ public:
         }
     }
 
+    int FindDirectory(int directoryId)
+    {
+        int pos{ 0 };
+        for (const auto& directory : subDirectories)
+        {
+            if (directory.directoryID == directoryId)
+            {
+                return pos; //return direc pos if found
+            }
+            pos++;
+        }
+        return -1; //return -1 if no direc found
+    }
 };
 
 

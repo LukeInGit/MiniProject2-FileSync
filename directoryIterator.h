@@ -18,6 +18,12 @@ public:
 
     void ResetIterator() { m_iterator = std::filesystem::directory_iterator{ m_path }; }
 
+    void ChangePath(std::string path)
+    {
+        m_path = path;
+        ResetIterator();
+    }
+
     const std::filesystem::directory_iterator& GetIterator() const {return m_iterator;}
     const std::filesystem::path& GetPath() const{ return m_path;}
 

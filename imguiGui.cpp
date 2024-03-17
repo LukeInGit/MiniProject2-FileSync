@@ -69,6 +69,7 @@ namespace imguiGUI {
         float windowHeight{ 800 };
         
         int buttonAmount{ 5 };
+        std::vector<bool> showButton(buttonAmount, true);
         int selectedButton{ -1 };
 
         bool done = false;
@@ -144,24 +145,6 @@ namespace imguiGUI {
                     windowWidth = windowSize.x;
                     windowHeight = windowSize.y;
 
-
-                    //if (ImGui::Button("open file dialog"))
-                    //    fileDialog.Open();
-
-
-
-
-                    //for (int buttonId{ 0 }; buttonId <= buttons; buttonId++)
-                    //{
-                    //    if (ImGui::Button(("Button " + std::to_string(buttonId)).c_str())) {
-                    //        fileDialog.Open();
-                    //        selectedButton = buttonId;
-                    //    }
-                    //    ImGui::InputText(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId], sizeof(filePathBuffer[buttonId]));
-                    //}
-
-
-
                     if (filePathBuffer.size() <= buttonAmount)
                     {
                         for (size_t i{ filePathBuffer.size() }; i < buttonAmount; i++)
@@ -171,20 +154,49 @@ namespace imguiGUI {
                     }
                     for (int buttonId = 0; buttonId < buttonAmount; ++buttonId)
                     {
-
-                        if (ImGui::Button(("Button " + std::to_string(buttonId)).c_str())) {
-                            fileDialog.Open();
-                            selectedButton = buttonId;
+                        if (showButton[buttonId])
+                        {
+                            if (ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str())) {
+                                fileDialog.Open();
+                                selectedButton = buttonId;
+                            }
+                            ImGui::SameLine();
+                            if (ImGui::Button(("Delete Subdirectory " + std::to_string(buttonId)).c_str()))
+                            {
+                                showButton[buttonId] = false;
+                                filePathBuffer[buttonId] = "";
+                                directoryVector.DeleteDirectory(buttonId);
+                            }
+                            // ImGui::Text(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId].data(), filePathBuffer[buttonId].size() + 1);
+                            ImGui::SameLine();
+                            std::string labelText = "Subdirectory " + std::to_string(buttonId) + " FilePath: " + filePathBuffer[buttonId];
+                            ImGui::Text(labelText.c_str());
                         }
-                        ImGui::InputText(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId].data(), filePathBuffer[buttonId].size() + 1);
                     }
 
 
                     if (ImGui::Button(("add")))
                     {
-                        buttonAmount++;
+                        bool found = false;
+                        for (size_t i = 0; i < showButton.size(); ++i) { //cant use for range loop on bool vector for this
+                            if (!showButton[i]) {
+                                showButton[i] = true;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found&& buttonAmount < 50) 
+                        {
+                                showButton.emplace_back(true);
+                                buttonAmount++;
+                        }
                     }
-
+                    if (buttonAmount >= 50)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // Red color
+                        ImGui::Text("You have reached the max limit of 50");
+                        ImGui::PopStyleColor();
+                    }
               //  ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
                // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
@@ -216,9 +228,20 @@ namespace imguiGUI {
 
                 if (fileDialog.HasSelected())
                 {
+
                     std::cout << "Selected filename: " << fileDialog.GetSelected().string() << ", Button: " << selectedButton << '\n';
                     filePathBuffer[selectedButton] = fileDialog.GetSelected().string();
-                    directoryVector.AddSubDirectory(filePathBuffer[selectedButton], selectedButton);
+                    if(directoryVector.FindDirectory(selectedButton)==-1)
+                    { 
+                        directoryVector.AddSubDirectory(filePathBuffer[selectedButton], selectedButton);
+                        std::cout << "sub directory added\n";
+                    }
+                    else
+                    {
+                        directoryVector.EditSubDirectory(filePathBuffer[selectedButton], selectedButton);
+                        std::cout << "sub directory edited \n";
+                    }
+
                     fileDialog.ClearSelected();
                 }
 
