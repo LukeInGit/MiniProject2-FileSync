@@ -138,7 +138,7 @@ namespace fManager {
         //temp, directories will not be set here in final
         directoryVector.SetMainDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", 0);
 
-        directoryVector.test();
+        directoryVector.PrintSubdirectories();
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1", 1);
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2", 1);
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3", 1);
