@@ -45,20 +45,15 @@ public:
         {
             mainDirectory.emplace_back(path, directoryID, "Main");
         }
+        else
+        {
+            std::cerr << "Main directory is already set." << '\n';
+        }
     }
     void AddSubDirectory(std::string path, int directoryID)
     {
         subDirectories.emplace_back(path, directoryID);
             
-    }
-    const DirectoryInfo& GetDirectory() const
-    {
-
-    }
-
-    bool test()
-    {
-        return 1;
     }
 
 #pragma warning(push)
@@ -83,13 +78,26 @@ public:
 
     void DeleteDirectory(int directoryID)
     {
+        
         subDirectories.erase(subDirectories.begin() + directoryID);
     }
-    void EditDirectory()
+    void EditMainDirectory()
     {
 
     }
+    void EditSubDirectory()
+    {
 
+    }
+    void PrintSubdirectories()
+    {
+        int pos{ 0 };
+        for (const auto& thing : subDirectories)
+        {
+            std::cout << "in position: "<<pos<<" name: " << thing.name << " & ID : " << thing.directoryID << '\n';
+            pos++;
+        }
+    }
 
 };
 

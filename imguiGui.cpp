@@ -60,14 +60,24 @@ namespace imguiGUI {
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
+
+        DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
+
         ImGui::FileBrowser fileDialog(ImGuiFileBrowserFlags_SelectDirectory| ImGuiFileBrowserFlags_HideRegularFiles);
         //default window size
         float windowWidth{ 1280 };
         float windowHeight{ 800 };
-        // Main loop
+        
+        int buttonAmount{ 5 };
+        int selectedButton{ -1 };
+
         bool done = false;
         bool notExiting{ true };
-        static char filePathBuffer[256]; // to put filedialog choice in textbox
+       // static char filePathBuffer[256]; // to put filedialog choice in textbox
+      //  char filePathBuffer[10][256]; // to put filedialog choice in textbox
+        std::vector<std::string> filePathBuffer;
+
+        // Main loop
         while (!done)
         {
             // Poll and handle messages (inputs, window resize, etc.)
@@ -88,10 +98,7 @@ namespace imguiGUI {
 
             // Handle window resize (we don't resize directly in the WM_SIZE handler)
             {
-               // if (!lbuttondown)
-               // {
                     ::SetWindowPos(hwnd, nullptr, 0, 0, static_cast<int>(windowWidth), static_cast<int>(windowHeight), SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
-               // }
                 if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
                 {
 
@@ -138,9 +145,45 @@ namespace imguiGUI {
                     windowHeight = windowSize.y;
 
 
-                    if (ImGui::Button("open file dialog"))
-                        fileDialog.Open();
+                    //if (ImGui::Button("open file dialog"))
+                    //    fileDialog.Open();
 
+
+
+
+                    //for (int buttonId{ 0 }; buttonId <= buttons; buttonId++)
+                    //{
+                    //    if (ImGui::Button(("Button " + std::to_string(buttonId)).c_str())) {
+                    //        fileDialog.Open();
+                    //        selectedButton = buttonId;
+                    //    }
+                    //    ImGui::InputText(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId], sizeof(filePathBuffer[buttonId]));
+                    //}
+
+
+
+                    if (filePathBuffer.size() <= buttonAmount)
+                    {
+                        for (size_t i{ filePathBuffer.size() }; i < buttonAmount; i++)
+                        {
+                            filePathBuffer.emplace_back();
+                        }
+                    }
+                    for (int buttonId = 0; buttonId < buttonAmount; ++buttonId)
+                    {
+
+                        if (ImGui::Button(("Button " + std::to_string(buttonId)).c_str())) {
+                            fileDialog.Open();
+                            selectedButton = buttonId;
+                        }
+                        ImGui::InputText(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId].data(), filePathBuffer[buttonId].size() + 1);
+                    }
+
+
+                    if (ImGui::Button(("add")))
+                    {
+                        buttonAmount++;
+                    }
 
               //  ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
@@ -148,29 +191,46 @@ namespace imguiGUI {
                // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
                 //if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                  //  counter++;
+                //  counter++;
                 //ImGui::SameLine();
                 //ImGui::Text("counter = %d", counter);
 
                 //if (g_Moving)
                 //{
-                  //  counter++;
+                //  counter++;
                 //}
-                ImGui::InputText("File Path", filePathBuffer, sizeof(filePathBuffer));
-                //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+              //  ImGui::InputText("File Path", filePathBuffer, sizeof(filePathBuffer));
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
 
                 fileDialog.Display();
 
                 
 
+                //if (fileDialog.HasSelected())
+                //{
+                //    std::cout << "Selected filename" << fileDialog.GetSelected().string() << selectedButton<<'\n';
+                //    strcpy_s(filePathBuffer[selectedButton], fileDialog.GetSelected().string().c_str());
+                //    fileDialog.ClearSelected();
+                //}
+
                 if (fileDialog.HasSelected())
                 {
-                    std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
-                    strcpy_s(filePathBuffer, fileDialog.GetSelected().string().c_str());
+                    std::cout << "Selected filename: " << fileDialog.GetSelected().string() << ", Button: " << selectedButton << '\n';
+                    filePathBuffer[selectedButton] = fileDialog.GetSelected().string();
+                    directoryVector.AddSubDirectory(filePathBuffer[selectedButton], selectedButton);
                     fileDialog.ClearSelected();
                 }
-               
+
+
+                //if (fileDialog.HasSelected()) {
+                //    // Get the title to determine which button was clicked
+                //    
+
+                //    fileDialog.ClearSelected();
+                //}
+
+
             }
 
 
