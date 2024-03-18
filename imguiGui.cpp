@@ -69,14 +69,14 @@ namespace imguiGUI {
         float windowHeight{ 800 };
         
         int buttonAmount{ 5 };
-        std::vector<bool> showButton(buttonAmount, true);
         int selectedButton{ -1 };
+        std::vector<bool> showButton(buttonAmount, true);
 
         bool done = false;
+        bool isSyncing{ false };
         bool notExiting{ true };
-       // static char filePathBuffer[256]; // to put filedialog choice in textbox
-      //  char filePathBuffer[10][256]; // to put filedialog choice in textbox
-        std::vector<std::string> filePathBuffer;
+        std::vector<std::string> subfilePathBuffer;
+        std::vector<std::string> mainfilePathBuffer(1);  //vector for main path in case I want to add functionality for multiple main directories
 
         // Main loop
         while (!done)
@@ -123,12 +123,12 @@ namespace imguiGUI {
                 static float f = 0.0f;
                 static int counter = 0;
                 ImGui::SetNextWindowPos({ 0,0 });
-                      
+
                 // Create a window called "FileSync" and append into it.                
                 //if window is being moved, dont allow it to be moved and resized at the same time
                 if (g_Moving) {
                     ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
-                    
+
                 }
                 else {
                     ImGui::Begin("FileSync", &notExiting, ImGuiWindowFlags_NoMove);
@@ -141,41 +141,69 @@ namespace imguiGUI {
                 }
 
                 //get imgui window size for dx9 window resizing later
-                    ImVec2 windowSize = ImGui::GetWindowSize();
-                    windowWidth = windowSize.x;
-                    windowHeight = windowSize.y;
+                ImVec2 windowSize = ImGui::GetWindowSize();
+                windowWidth = windowSize.x;
+                windowHeight = windowSize.y;
 
-                    if (filePathBuffer.size() <= buttonAmount)
+
+                {
+                if (ImGui::Button(("Add Main directory")))
+                {
+                    fileDialog.Open();
+                    selectedButton = -1;
+                }
+                ImGui::SameLine();
+                std::string labelText = "Main Directory FilePath: " + mainfilePathBuffer[0];
+                ImGui::Text(labelText.c_str());
+                }
+
+                AddSeperator();
+
+                    if (subfilePathBuffer.size() <= buttonAmount)//initialise filePathBuffer up to the same amount as allowed buttons
                     {
-                        for (size_t i{ filePathBuffer.size() }; i < buttonAmount; i++)
+                        for (size_t i{ subfilePathBuffer.size() }; i < buttonAmount; i++)
                         {
-                            filePathBuffer.emplace_back();
+                            subfilePathBuffer.emplace_back();
                         }
                     }
-                    for (int buttonId = 0; buttonId < buttonAmount; ++buttonId)
+                    for (int buttonId = 0; buttonId < buttonAmount; ++buttonId)//allow creation of relevant subdirectory buttons dependant on buttonamount (the max amount of buttons allowed)
                     {
                         if (showButton[buttonId])
                         {
-                            if (ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str())) {
-                                fileDialog.Open();
-                                selectedButton = buttonId;
-                            }
-                            ImGui::SameLine();
-                            if (ImGui::Button(("Delete Subdirectory " + std::to_string(buttonId)).c_str()))
+                            if (isSyncing)//disable button functionality and grey them out if the program is currently syncing files
                             {
-                                showButton[buttonId] = false;
-                                filePathBuffer[buttonId] = "";
-                                directoryVector.DeleteDirectory(buttonId);
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f); // Dim button
+                                ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str());
+                                ImGui::SameLine();
+                                ImGui::Button(("Delete Subdirectory " + std::to_string(buttonId)).c_str());
+                                ImGui::PopStyleVar();
+                            }
+                            else 
+                            {
+
+
+                                if (ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str())) {
+                                    fileDialog.Open();
+                                    selectedButton = buttonId;
+                                }
+                                ImGui::SameLine();
+                                if (ImGui::Button(("Delete Subdirectory " + std::to_string(buttonId)).c_str()))
+                                {
+                                    showButton[buttonId] = false;
+                                    subfilePathBuffer[buttonId] = "";
+                                    directoryVector.DeleteDirectory(buttonId);
+                                }
                             }
                             // ImGui::Text(("File Path " + std::to_string(buttonId)).c_str(), filePathBuffer[buttonId].data(), filePathBuffer[buttonId].size() + 1);
                             ImGui::SameLine();
-                            std::string labelText = "Subdirectory " + std::to_string(buttonId) + " FilePath: " + filePathBuffer[buttonId];
+                            std::string labelText = "Subdirectory " + std::to_string(buttonId) + " FilePath: " + subfilePathBuffer[buttonId];
                             ImGui::Text(labelText.c_str());
+                            AddSeperator();
                         }
                     }
 
 
-                    if (ImGui::Button(("add")))
+                    if (ImGui::Button(("\n New Subdirectory \n ")))
                     {
                         bool found = false;
                         for (size_t i = 0; i < showButton.size(); ++i) { //cant use for range loop on bool vector for this
@@ -197,21 +225,18 @@ namespace imguiGUI {
                         ImGui::Text("You have reached the max limit of 50");
                         ImGui::PopStyleColor();
                     }
-              //  ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-               // ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-               // ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+                    if (ImGui::Button(("\n START \n ")))
+                    {
+                        isSyncing = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button(("\n STOP \n ")))
+                    {
+                        isSyncing = false;
+                    }
+            
 
-                //if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                //  counter++;
-                //ImGui::SameLine();
-                //ImGui::Text("counter = %d", counter);
-
-                //if (g_Moving)
-                //{
-                //  counter++;
-                //}
-              //  ImGui::InputText("File Path", filePathBuffer, sizeof(filePathBuffer));
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
                 ImGui::End();
 
@@ -228,20 +253,25 @@ namespace imguiGUI {
 
                 if (fileDialog.HasSelected())
                 {
-
                     std::cout << "Selected filename: " << fileDialog.GetSelected().string() << ", Button: " << selectedButton << '\n';
-                    filePathBuffer[selectedButton] = fileDialog.GetSelected().string();
-                    if(directoryVector.FindDirectory(selectedButton)==-1)
-                    { 
-                        directoryVector.AddSubDirectory(filePathBuffer[selectedButton], selectedButton);
-                        std::cout << "sub directory added\n";
-                    }
-                    else
-                    {
-                        directoryVector.EditSubDirectory(filePathBuffer[selectedButton], selectedButton);
-                        std::cout << "sub directory edited \n";
-                    }
+                    if (selectedButton != -1) {
 
+                        subfilePathBuffer[selectedButton] = fileDialog.GetSelected().string();
+                        if (directoryVector.FindDirectory(selectedButton) == -1)  //if button id does not already have an associated directory, add one
+                        {
+                            directoryVector.AddSubDirectory(subfilePathBuffer[selectedButton], selectedButton);
+                            std::cout << "sub directory added\n";
+                        }
+                        else                                                   //if it already has one, edit it instead
+                        {
+                            directoryVector.EditSubDirectory(subfilePathBuffer[selectedButton], selectedButton);
+                            std::cout << "sub directory edited \n";
+                        }
+                    }
+                    else {
+                        mainfilePathBuffer[0] = fileDialog.GetSelected().string();
+                        directoryVector.SetMainDirectory(mainfilePathBuffer[0],0);//directory id not needed with 1 main direc but will be if we decide to add more
+                    }
                     fileDialog.ClearSelected();
                 }
 
@@ -256,6 +286,14 @@ namespace imguiGUI {
 
             }
 
+            if (isSyncing)
+            {
+                directoryVector.startSyncing();
+            }
+            else
+            {
+                directoryVector.stopSyncing();
+            }
 
             // Rendering
             ImGui::EndFrame();
@@ -289,6 +327,13 @@ namespace imguiGUI {
     }
 
     // Helper functions
+
+    void AddSeperator()
+    {
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+    }
 
     bool CreateDeviceD3D(HWND hWnd)
     {

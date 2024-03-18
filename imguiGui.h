@@ -25,6 +25,7 @@ namespace imguiGUI {
 	int imguiMainLoop(int, char**);
 
 	// Helper functions
+	void AddSeperator();
 	bool CreateDeviceD3D(HWND hWnd);
 	void CleanupDeviceD3D();
 	void ResetDevice();

@@ -19,12 +19,13 @@ struct DirectoryInfo // for making it obvious in the code that a direc is meant 
 };
 
 
-//class simply for holding(inc adding/deleting/editing) instances of directoryiterator
+//class simply for filemanager/gui communication
 class DirectoryVector
 {
 private:
-    std::vector<DirectoryInfo> mainDirectory;
-    std::vector<DirectoryInfo> subDirectories;
+    std::vector<DirectoryInfo> m_mainDirectory;
+    std::vector<DirectoryInfo> m_subDirectories;
+    bool m_isSyncing{ false };
 
     DirectoryVector()
     {}
@@ -41,20 +42,20 @@ public:
 
     void SetMainDirectory(std::string path, int directoryID)
     {
-        if (mainDirectory.empty())
+        if (m_mainDirectory.empty())
         {
-            mainDirectory.emplace_back(path, directoryID, "Main");
+            m_mainDirectory.emplace_back(path, directoryID, "Main");
         }
         else
         {
-            std::cerr << "Main directory is already set." << '\n';
+            m_mainDirectory[0].iterator.ChangePath(path);
         }
     }
     bool AddSubDirectory(std::string path, int directoryID)
     {
         if (FindDirectory(directoryID)==-1)
         {
-            subDirectories.emplace_back(path, directoryID);
+            m_subDirectories.emplace_back(path, directoryID);
             return true;
         }
         return false;
@@ -64,11 +65,11 @@ public:
 #pragma warning(disable : 4715) // Disable warning C4715 for this function
      DirectoryInfo& GetMainDirectory() ////cant be const, iterator needs to be reset
     {
-        if (!mainDirectory.empty())
+        if (!m_mainDirectory.empty())
         {
-            if (!mainDirectory[0].iterator.GetPath().empty())
+            if (!m_mainDirectory[0].iterator.GetPath().empty())
             {
-                return mainDirectory[0];
+                return m_mainDirectory[0];
             }
         }
         else{ throw std::runtime_error("Main directory path is empty"); }
@@ -77,7 +78,7 @@ public:
 
      std::vector<DirectoryInfo>& GetSubdirectories() //cant be const, iterator needs to be reset
     {
-        return subDirectories;
+        return m_subDirectories;
     }
 
     void DeleteDirectory(int directoryID)
@@ -89,7 +90,7 @@ public:
         }
         else
         {
-            subDirectories.erase(subDirectories.begin() + index);
+            m_subDirectories.erase(m_subDirectories.begin() + index);
             std::cout << "subdirec deleted\n";
         }
     }
@@ -100,12 +101,12 @@ public:
     void EditSubDirectory(std::string path, int directoryID)
     {
         int index = FindDirectory(directoryID);
-        subDirectories[index].iterator.ChangePath(path);
+        m_subDirectories[index].iterator.ChangePath(path);
     }
     void PrintSubdirectories()
     {
         int pos{ 0 };
-        for (const auto& thing : subDirectories)
+        for (const auto& thing : m_subDirectories)
         {
             std::cout << "in position: "<<pos<<" name: " << thing.name << " & ID : " << thing.directoryID << '\n';
             pos++;
@@ -115,7 +116,7 @@ public:
     int FindDirectory(int directoryId)
     {
         int pos{ 0 };
-        for (const auto& directory : subDirectories)
+        for (const auto& directory : m_subDirectories)
         {
             if (directory.directoryID == directoryId)
             {
@@ -125,6 +126,25 @@ public:
         }
         return -1; //return -1 if no direc found
     }
+
+    bool isSyncing(){return m_isSyncing;}
+
+    void startSyncing()
+    {
+        if(!m_isSyncing)
+        {
+            m_isSyncing = true;
+        }
+    }
+    void stopSyncing()
+    {
+        if (m_isSyncing)
+        {
+            m_isSyncing = false;
+        }
+    }
+
+
 };
 
 
