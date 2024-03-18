@@ -129,16 +129,16 @@ namespace fManager {
     }
 
 
-    int runFM()
+    int runFM(std::stop_token stopToken)
     {
 
 
-        DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
+       // DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
 
         //temp, directories will not be set here in final
-        directoryVector.SetMainDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", 0);
+       // directoryVector.SetMainDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", 0);
 
-        directoryVector.PrintSubdirectories();
+       // directoryVector.PrintSubdirectories();
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1", 1);
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2", 1);
        // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3", 1);
@@ -179,6 +179,70 @@ namespace fManager {
        // std::this_thread::sleep_for(std::chrono::seconds(10));
 
        // ssource.request_stop();
+
+
+        //bool done{ false };
+
+        DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
+
+        bool hasStarted{ false };//make sure functionality only runs once
+        bool hasRequestedStop{ false };//make sure functionality only runs once
+
+        std::stop_source ssource;
+        std::vector<std::jthread> threads;
+
+        {//try make gui and filemanager run as close to the same time as possible
+            std::lock_guard<std::mutex> lck(mtx);
+            ready = true;
+            cv.notify_one();
+        }
+        while (!directoryVector.isExiting() && !stopToken.stop_requested())// && directoryVector.isGuiAlive())
+        {
+            //directoryVector.guiCheck();
+            if (directoryVector.isSyncing())
+            {
+                if (!hasStarted)
+                {
+                    hasStarted = true;
+
+                    DirectoryInfo& mainDirectory{ directoryVector.GetMainDirectory() };
+                    std::vector<DirectoryInfo>& subDirectories{ directoryVector.GetSubdirectories() };
+
+
+                    //std::vector<std::jthread> threads;
+                    //std::stop_source ssource;
+
+                    std::jthread mainMonitorThread(MonitorDirectory, std::ref(mainDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
+                    threads.emplace_back(std::move(mainMonitorThread));
+
+                    for (DirectoryInfo& subDirectory : subDirectories) {
+                        std::jthread monitorThread(MonitorDirectory, std::ref(subDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
+                        threads.emplace_back(std::move(monitorThread));
+                    }
+
+                    SyncAllDirectories(mainDirectory, subDirectories);
+                    hasRequestedStop = false;
+                }
+            }
+            else
+            {
+                if (!hasRequestedStop)
+                {
+                    ssource.request_stop(); //request stop for threads
+
+                    // Wait for all threads to finish, jthreads automatically join when destroyed but just in case
+                    for (auto& thread : threads)
+                    {
+                        if (thread.joinable()) 
+                        {
+                            thread.join();
+                        }
+                    }
+                        hasStarted = false;
+                }
+            }
+        }
+        ssource.request_stop();//just in case it didnt already call for whatever reason
 
         return 0;
 

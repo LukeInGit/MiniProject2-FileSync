@@ -5,9 +5,30 @@
 //run with console showing up, requires linker>system>subsytem to be console
 int main()
 {
-	imguiGUI::imguiMainLoop(__argc, __argv); //currently runs imgui's dx9 example
+	std::stop_source mainssource;
+	std::vector<std::jthread> threads;
 
-	fManager::runFM(); //runs current main loop of filemanager
+	//imguiGUI::imguiMainLoop(__argc, __argv); //currently runs imgui's dx9 example
+	//fManager::runFM(); //runs current main loop of filemanager
+
+
+
+    // Create a jthread for imguiGUI::imguiMainLoop
+    threads.emplace_back([&]() {
+        imguiGUI::imguiMainLoop(__argc, __argv);
+        mainssource.request_stop();
+        });
+
+    // Create a jthread for fManager::runFM
+    threads.emplace_back([&]() {
+        fManager::runFM(mainssource.get_token()); // Pass imguiStopSource token to runFM
+        });
+
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
 }
 
 ////run without console showing up, requires linker>system>subsytem to be windows

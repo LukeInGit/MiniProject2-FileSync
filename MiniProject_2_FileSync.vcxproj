@@ -152,6 +152,7 @@
     <ClCompile Include="fileManager.cpp" />
     <ClCompile Include="imguiGui.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="syncThreads.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="directoryIterator.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="external\~imgui\imstb_truetype.h" />
     <ClInclude Include="fileManager.h" />
     <ClInclude Include="imguiGui.h" />
+    <ClInclude Include="syncThreads.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

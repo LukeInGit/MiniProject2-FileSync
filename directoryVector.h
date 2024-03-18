@@ -1,6 +1,8 @@
 #ifndef DIRECTORYVECTOR_H
 #define DIRECTORYVECTOR_H
 
+//poorly named for a communication header, may change
+
 #include "directoryIterator.h"
 #include <vector>  
 #include <stdexcept>
@@ -26,6 +28,8 @@ private:
     std::vector<DirectoryInfo> m_mainDirectory;
     std::vector<DirectoryInfo> m_subDirectories;
     bool m_isSyncing{ false };
+    bool m_isExiting{ false };
+    int m_guiHP{ 500 }; //heartbeat 
 
     DirectoryVector()
     {}
@@ -76,6 +80,11 @@ public:
     }
 #pragma warning(pop)
 
+     bool isMainSet()
+     {
+         return !m_mainDirectory.empty();
+     }
+
      std::vector<DirectoryInfo>& GetSubdirectories() //cant be const, iterator needs to be reset
     {
         return m_subDirectories;
@@ -96,7 +105,7 @@ public:
     }
     void EditMainDirectory()
     {
-
+        //add later
     }
     void EditSubDirectory(std::string path, int directoryID)
     {
@@ -144,7 +153,13 @@ public:
         }
     }
 
+    void exitProgram() { m_isExiting = true; }
+    bool isExiting() { return m_isExiting; }
 
+    //probably dont need this, stop token works instead
+    //void guiCheck() { m_guiHP--; }
+    //void guiImAlive(){ m_guiHP = 500; }
+    //bool isGuiAlive() { return(m_guiHP <= 0); }//heartbeat check for filemanager to see if gui has crashed or altf4'd etc
 };
 
 

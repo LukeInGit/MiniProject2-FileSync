@@ -13,6 +13,7 @@
 
 #include "directoryIterator.h"
 #include "directoryVector.h"
+#include "syncThreads.h"
 
 namespace fManager {
 
@@ -42,7 +43,7 @@ namespace fManager {
 	void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories);
 
 
-	int runFM();
+	int runFM(std::stop_token stopToken);
 
 }
 #endif // !FILEMANAGER_H

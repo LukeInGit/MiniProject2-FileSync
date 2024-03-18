@@ -51,6 +51,9 @@
     <ClCompile Include="imguiGui.cpp">
       <Filter>Source Files\mysrc</Filter>
     </ClCompile>
+    <ClCompile Include="syncThreads.cpp">
+      <Filter>Source Files\mysrc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\~imgui\imconfig.h">
@@ -87,6 +90,9 @@
       <Filter>Source Files\mysrc</Filter>
     </ClInclude>
     <ClInclude Include="directoryVector.h">
+      <Filter>Source Files\mysrc</Filter>
+    </ClInclude>
+    <ClInclude Include="syncThreads.h">
       <Filter>Source Files\mysrc</Filter>
     </ClInclude>
   </ItemGroup>

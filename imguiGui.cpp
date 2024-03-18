@@ -78,6 +78,12 @@ namespace imguiGUI {
         std::vector<std::string> subfilePathBuffer;
         std::vector<std::string> mainfilePathBuffer(1);  //vector for main path in case I want to add functionality for multiple main directories
 
+
+        {//try make gui and filemanager run as close to the same time as possible
+            std::unique_lock<std::mutex> lck(mtx);
+            cv.wait(lck, [] { return ready; });
+        }
+
         // Main loop
         while (!done)
         {
@@ -137,7 +143,9 @@ namespace imguiGUI {
                 //exit if x button pressed
                 if (!notExiting)
                 {
+                    directoryVector.exitProgram();
                     ::PostQuitMessage(0);
+
                 }
 
                 //get imgui window size for dx9 window resizing later
@@ -147,14 +155,23 @@ namespace imguiGUI {
 
 
                 {
-                if (ImGui::Button(("Add Main directory")))
-                {
-                    fileDialog.Open();
-                    selectedButton = -1;
-                }
-                ImGui::SameLine();
-                std::string labelText = "Main Directory FilePath: " + mainfilePathBuffer[0];
-                ImGui::Text(labelText.c_str());
+                    if (isSyncing)//disable button functionality and grey them out if the program is currently syncing files
+                    {
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f); // Dim button
+                        ImGui::Button(("Set Main directory"));
+                        ImGui::PopStyleVar();
+                    }
+                    else
+                    {
+                        if (ImGui::Button(("Set Main directory")))
+                        {
+                            fileDialog.Open();
+                            selectedButton = -1;
+                        }
+                    }
+                    ImGui::SameLine();
+                    std::string labelText = "Main Directory FilePath: " + mainfilePathBuffer[0];
+                    ImGui::Text(labelText.c_str());
                 }
 
                 AddSeperator();
@@ -173,16 +190,14 @@ namespace imguiGUI {
                             if (isSyncing)//disable button functionality and grey them out if the program is currently syncing files
                             {
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f); // Dim button
-                                ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str());
+                                ImGui::Button(("Set Subdirectory " + std::to_string(buttonId)).c_str());
                                 ImGui::SameLine();
                                 ImGui::Button(("Delete Subdirectory " + std::to_string(buttonId)).c_str());
                                 ImGui::PopStyleVar();
                             }
                             else 
                             {
-
-
-                                if (ImGui::Button(("Add Subdirectory " + std::to_string(buttonId)).c_str())) {
+                                if (ImGui::Button(("Set Subdirectory " + std::to_string(buttonId)).c_str())) {
                                     fileDialog.Open();
                                     selectedButton = buttonId;
                                 }
@@ -202,21 +217,29 @@ namespace imguiGUI {
                         }
                     }
 
-
-                    if (ImGui::Button(("\n New Subdirectory \n ")))
+                    if (isSyncing)//disable button functionality and grey them out if the program is currently syncing files
                     {
-                        bool found = false;
-                        for (size_t i = 0; i < showButton.size(); ++i) { //cant use for range loop on bool vector for this
-                            if (!showButton[i]) {
-                                showButton[i] = true;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found&& buttonAmount < 50) 
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f); // Dim button
+                        ImGui::Button(("\n New Subdirectory \n "));
+                        ImGui::PopStyleVar();
+                    }
+                    else
+                    {
+                        if (ImGui::Button(("\n New Subdirectory \n ")))
                         {
+                            bool found = false;
+                            for (size_t i = 0; i < showButton.size(); ++i) { //cant use for range loop on bool vector for this
+                                if (!showButton[i]) {
+                                    showButton[i] = true;
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found && buttonAmount < 50)
+                            {
                                 showButton.emplace_back(true);
                                 buttonAmount++;
+                            }
                         }
                     }
                     if (buttonAmount >= 50)
@@ -228,7 +251,11 @@ namespace imguiGUI {
 
                     if (ImGui::Button(("\n START \n ")))
                     {
-                        isSyncing = true;
+                        if (directoryVector.isMainSet())
+                        {
+                            isSyncing = true;
+                        }
+
                     }
                     ImGui::SameLine();
                     if (ImGui::Button(("\n STOP \n ")))
@@ -294,6 +321,8 @@ namespace imguiGUI {
             {
                 directoryVector.stopSyncing();
             }
+
+            //directoryVector.guiImAlive();//tell fm gui hasnt terminated
 
             // Rendering
             ImGui::EndFrame();
