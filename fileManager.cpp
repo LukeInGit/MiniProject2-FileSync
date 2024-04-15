@@ -47,6 +47,7 @@ namespace fManager {
     
     void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
     {
+        subDirectory.iterator.ResetIterator();// iterators need to be reset before use here or it may fail to detect new or changed files
         for (const auto& fileInSub : subDirectory.iterator.GetIterator())                                                                        //for each file in subdirectory
         {
             std::string subfilename = fileInSub.path().filename().string();
@@ -59,11 +60,12 @@ namespace fManager {
                 DeleteFile(fileInSub.path());
             }
         }
-        subDirectory.iterator.ResetIterator();// iterators need to be reset after being used or they will only detect the final file
+        subDirectory.iterator.ResetIterator();// iterators also need to be reset after being used or they will only detect the final file
     }
 
     void SyncMainDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
     {
+        mainDirectory.iterator.ResetIterator();// iterators need to be reset before use here or it may fail to detect new or changed files
         for (const auto& fileInMain : mainDirectory.iterator.GetIterator()) {                                                                    //for each file in the main directory                   
 
             std::string mainfilename = fileInMain.path().filename().string();                                                                    // depending on if filenames exist.
@@ -77,7 +79,7 @@ namespace fManager {
                 CopyFileTo(fileInMain.path(), subDirectory.iterator);
             }
         }
-        mainDirectory.iterator.ResetIterator();// iterators need to be reset after being used or they will only detect the final file
+        mainDirectory.iterator.ResetIterator();// iterators also to be reset after being used or they will only detect the final file
     }
 
     void SyncAllDirectories(DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories)
@@ -108,16 +110,21 @@ namespace fManager {
                 if (currentModificationTime != lastModificationTime)                //if a file has been modified
                 {
                     std::cout << pathToMonitor.filename() << " has been modified.\n";
+                    std::cout << "id is: " <<direcToMonitor.directoryID << '\n';
                     // perform actions based on directory changes
                     std::lock_guard<std::mutex> lock(mtx);                          //mutex lock
-                    if (direcToMonitor.directoryID == 0)                            //check if the directory that was modified was the main one via the ID
+                    if (direcToMonitor.name == "Main")                            //check if the directory that was modified was the main one via the ID
                     {
+                        std::cout << "FM: name was Main, running sync all\n";
                         SyncAllDirectories(mainDirectory, subDirectories);          //if it was, call a full scale sync
                     }
                     else
                     {
-                        SyncSubDirectory(mainDirectory, subDirectories[direcToMonitor.directoryID - 1]); //-1 because maindirec is 0 and is not included in subDirectories vector 
-                        SyncMainDirectory(mainDirectory, subDirectories[direcToMonitor.directoryID - 1]);//^
+
+                        std::cout << "FM: name was not Main, running sync sub then sync main\n";
+                        SyncSubDirectory(mainDirectory, subDirectories[direcToMonitor.directoryID]); //originally -1 because maindirec and subs were in the same array where main was always 0 
+                        SyncMainDirectory(mainDirectory, subDirectories[direcToMonitor.directoryID]);
+
                     }
                     lastModificationTime = currentModificationTime;                 //reset the check variables
                 }
@@ -130,10 +137,6 @@ namespace fManager {
         }
         std::cout << "FM: MonitorDirectory complete\n";
     }
-
-
-
-
 
 
 
@@ -223,7 +226,6 @@ namespace fManager {
                     std::vector<DirectoryInfo>& subDirectories{ directoryVector.GetSubdirectories() };
 
 
-                    //std::vector<std::jthread> threads;
                     ssource = std::stop_source(); // assign new stop source
                     std::stop_token monitorDirecStoken= ssource.get_token(); //create new token every time this condition is ran
 
