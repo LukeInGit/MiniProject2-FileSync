@@ -92,13 +92,15 @@ namespace fManager {
     std::mutex mtx;
     void MonitorDirectory(DirectoryInfo& direcToMonitor, std::stop_token stoken, DirectoryInfo& mainDirectory, std::vector<DirectoryInfo>& subDirectories) {//monitor a directory and detect changes.
 
+        std::cout << "FM: initialising MonitorDirectory\n";
+
         std::filesystem::file_time_type lastModificationTime = std::filesystem::last_write_time(direcToMonitor.iterator.GetPath());
 
         std::filesystem::path pathToMonitor = direcToMonitor.iterator.GetPath();
 
         while (!stoken.stop_requested()) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-
+            std::cout << "FM: Monitor Directory is active\n";
             if (std::filesystem::exists(pathToMonitor))
             {
                 std::filesystem::file_time_type currentModificationTime = std::filesystem::last_write_time(pathToMonitor);
@@ -126,7 +128,17 @@ namespace fManager {
                 break;
             }
         }
+        std::cout << "FM: MonitorDirectory complete\n";
     }
+
+
+
+
+
+
+
+
+
 
 
     int runFM(std::stop_token stopToken)
@@ -200,9 +212,11 @@ namespace fManager {
         {
             //directoryVector.guiCheck();
             if (directoryVector.isSyncing())
-            {
+            {   
                 if (!hasStarted)
                 {
+                    std::cout << "FM: directoryvector is syncing\n";
+                    if (ssource.stop_requested()) { std::cout << "FM stop requested"; };
                     hasStarted = true;
 
                     DirectoryInfo& mainDirectory{ directoryVector.GetMainDirectory() };
@@ -210,13 +224,14 @@ namespace fManager {
 
 
                     //std::vector<std::jthread> threads;
-                    //std::stop_source ssource;
+                    ssource = std::stop_source(); // assign new stop source
+                    std::stop_token monitorDirecStoken= ssource.get_token(); //create new token every time this condition is ran
 
-                    std::jthread mainMonitorThread(MonitorDirectory, std::ref(mainDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
+                    std::jthread mainMonitorThread(MonitorDirectory, std::ref(mainDirectory), monitorDirecStoken, std::ref(mainDirectory), std::ref(subDirectories));
                     threads.emplace_back(std::move(mainMonitorThread));
 
                     for (DirectoryInfo& subDirectory : subDirectories) {
-                        std::jthread monitorThread(MonitorDirectory, std::ref(subDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
+                        std::jthread monitorThread(MonitorDirectory, std::ref(subDirectory), monitorDirecStoken, std::ref(mainDirectory), std::ref(subDirectories));
                         threads.emplace_back(std::move(monitorThread));
                     }
 
@@ -226,9 +241,11 @@ namespace fManager {
             }
             else
             {
+                
                 if (!hasRequestedStop)
                 {
-                    ssource.request_stop(); //request stop for threads
+                    std::cout << "FM: directoryvector is not syncing\n";
+                    ssource.request_stop(); //request stop for all stop tokens in ssource 
 
                     // Wait for all threads to finish, jthreads automatically join when destroyed but just in case
                     for (auto& thread : threads)
@@ -239,6 +256,7 @@ namespace fManager {
                         }
                     }
                         hasStarted = false;
+                        hasRequestedStop = true;
                 }
             }
         }
