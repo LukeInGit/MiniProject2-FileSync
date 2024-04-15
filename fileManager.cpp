@@ -11,8 +11,30 @@ namespace fManager {
 
     void CopyFileTo(const std::filesystem::path& filepath, DirectoryIterator& targetDirectory)
     {
-        std::filesystem::copy(filepath, targetDirectory.GetPath());
+        std::filesystem::path destination = targetDirectory.GetPath() / filepath.filename();
+
+        try {
+            if (std::filesystem::is_regular_file(filepath)) {
+                //copy file to target directory
+                std::filesystem::copy(filepath, destination);
+            }
+            else if (std::filesystem::is_directory(filepath)) {
+                //create the destination directory if it doesn't exist
+                if (!std::filesystem::exists(destination)) {
+                    std::filesystem::create_directory(destination);
+                }
+                //recursively copy directory contents
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(filepath)) {
+                    std::filesystem::copy(entry.path(), destination / entry.path().filename());
+                }
+            }
+        }
+        catch (const std::filesystem::filesystem_error& e) {
+            //handle filesystem error
+            std::cerr << "filesystem error: " << e.what() << '\n';
+        }
     }
+    
 
     void MoveFileTo(const std::filesystem::path& filepath, DirectoryIterator& targetDirectory)
     {
@@ -21,7 +43,13 @@ namespace fManager {
 
     void DeleteFile(const std::filesystem::path& filepath)
     {
-        std::filesystem::remove(filepath);
+        try {
+            std::filesystem::remove_all(filepath);
+        }
+        catch (const std::filesystem::filesystem_error& e) {
+            //handle filesystem error
+            std::cerr << "filesystem error: " << e.what() << "\n";
+        }
     }
 
     void DeleteAllFilesInDirec(DirectoryIterator& binDirectory)
@@ -34,16 +62,6 @@ namespace fManager {
             }
         }
     }
-
-    //struct DirectoryInfo // for making it obvious in the code that a direc is meant to be bin/main/sub
-    //{
-    //    std::string name;
-    //    int directoryID;
-    //    DirectoryIterator iterator;
-
-    //    DirectoryInfo(std::string path, int directoryID, std::string name = "Sub")
-    //        : iterator{ path }, directoryID{ directoryID }, name{ name } {}
-    //};
     
     void SyncSubDirectory(DirectoryInfo& mainDirectory, DirectoryInfo& subDirectory)
     {
@@ -113,7 +131,7 @@ namespace fManager {
                     std::cout << "id is: " <<direcToMonitor.directoryID << '\n';
                     // perform actions based on directory changes
                     std::lock_guard<std::mutex> lock(mtx);                          //mutex lock
-                    if (direcToMonitor.name == "Main")                            //check if the directory that was modified was the main one via the ID
+                    if (direcToMonitor.name == "Main")                            //check if the directory that was modified was the main one via the name
                     {
                         std::cout << "FM: name was Main, running sync all\n";
                         SyncAllDirectories(mainDirectory, subDirectories);          //if it was, call a full scale sync
@@ -140,63 +158,8 @@ namespace fManager {
 
 
 
-
-
-
-
     int runFM(std::stop_token stopToken)
     {
-
-
-       // DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
-
-        //temp, directories will not be set here in final
-       // directoryVector.SetMainDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory", 0);
-
-       // directoryVector.PrintSubdirectories();
-       // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1", 1);
-       // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2", 1);
-       // directoryVector.AddSubDirectory("C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3", 1);
-
-
-
-
-
-       // //DirectoryInfo mainDirectory{ "C:/Users/Luke/source/repos/MiniProject_2_FileSync/MainDirectory",0, "Main" };
-       // [[maybe_unused]]  DirectoryInfo& mainDirectory{directoryVector.GetMainDirectory()};
-
-       // //std::vector<DirectoryInfo> subDirectories =
-       // //{
-       // //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory1",1, "Sub"},
-       // //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory2",2, "Sub"},
-       // //    {"C:/Users/Luke/source/repos/MiniProject_2_FileSync/SubDirectory3",3, "Sub"},
-       // //}; 
-       //  
-       // [[maybe_unused]]  std::vector<DirectoryInfo>& subDirectories{ directoryVector.GetSubdirectories() };
-
-
-       // 
-
-
-
-       // std::vector<std::jthread> threads;
-       // std::stop_source ssource;
-
-       // std::jthread mainMonitorThread(MonitorDirectory, std::ref(mainDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
-       // threads.emplace_back(std::move(mainMonitorThread));
-
-       // for ( DirectoryInfo& subDirectory : subDirectories) {
-       //     std::jthread monitorThread(MonitorDirectory, std::ref(subDirectory), ssource.get_token(), std::ref(mainDirectory), std::ref(subDirectories));
-       //     threads.emplace_back(std::move(monitorThread));
-       // }
-
-       //// SyncAllDirectories(mainDirectory, subDirectories);
-       // std::this_thread::sleep_for(std::chrono::seconds(10));
-
-       // ssource.request_stop();
-
-
-        //bool done{ false };
 
         DirectoryVector& directoryVector = DirectoryVector::getInstance(); //singleton of directoryvector, one call in fileManager.cpp and one in imguiGUI.cpp
 
